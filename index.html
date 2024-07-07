@@ -81,7 +81,9 @@
 
       function updateMapOrientation(event) {
           const alpha = event.alpha; // alpha is the rotation around the z-axis (0-360)
-          map.rotateTo(alpha, { duration: 0 });
+          const orientation = window.screen.orientation || window.screen.mozOrientation || window.screen.msOrientation;
+          const correctedAlpha = (orientation.type.includes("landscape") ? alpha : -alpha);
+          map.rotateTo(correctedAlpha, { duration: 0 });
       }
 
       if (navigator.geolocation) {
