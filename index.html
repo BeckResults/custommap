@@ -79,6 +79,11 @@
           alert('Error getting location. Make sure location services are enabled.');
       }
 
+      function updateMapOrientation(event) {
+          const alpha = event.alpha; // alpha is the rotation around the z-axis (0-360)
+          map.rotateTo(alpha, { duration: 0 });
+      }
+
       if (navigator.geolocation) {
           navigator.geolocation.watchPosition(updateMarkerPosition, handleLocationError, {
               enableHighAccuracy: true,
@@ -87,6 +92,12 @@
           });
       } else {
           alert('Geolocation is not supported by your browser.');
+      }
+
+      if (window.DeviceOrientationEvent) {
+          window.addEventListener('deviceorientation', updateMapOrientation);
+      } else {
+          alert('Device orientation is not supported by your browser.');
       }
   </script>
 </body>
