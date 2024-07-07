@@ -23,20 +23,55 @@
       });
 
       let marker;
+      let lastPos = null;
+      const ANIMATION_DURATION = 1000; // Duration of the animation in milliseconds
+
+      function interpolatePosition(start, end, factor) {
+          return [
+              start[0] + (end[0] - start[0]) * factor,
+              start[1] + (end[1] - start[1]) * factor
+          ];
+      }
+
+      function animateMarker(startPos, endPos) {
+          const startTime = performance.now();
+
+          function animate() {
+              const currentTime = performance.now();
+              const elapsed = currentTime - startTime;
+              const factor = Math.min(elapsed / ANIMATION_DURATION, 1);
+
+              const newPos = interpolatePosition(startPos, endPos, factor);
+              marker.setLngLat(newPos);
+              map.setCenter(newPos);
+
+              if (factor < 1) {
+                  requestAnimationFrame(animate);
+              }
+          }
+
+          requestAnimationFrame(animate);
+      }
 
       function updateMarkerPosition(position) {
           const { latitude, longitude } = position.coords;
-          const newPosition = [longitude, latitude];
+          const newPos = [longitude, latitude];
 
           if (!marker) {
               marker = new maptilersdk.Marker()
-                  .setLngLat(newPosition)
+                  .setLngLat(newPos)
                   .addTo(map);
+              map.setCenter(newPos);
           } else {
-              marker.setLngLat(newPosition);
+              if (lastPos) {
+                  animateMarker(lastPos, newPos);
+              } else {
+                  marker.setLngLat(newPos);
+                  map.setCenter(newPos);
+              }
           }
 
-          map.setCenter(newPosition);
+          lastPos = newPos;
       }
 
       function handleLocationError(error) {
@@ -47,8 +82,8 @@
       if (navigator.geolocation) {
           navigator.geolocation.watchPosition(updateMarkerPosition, handleLocationError, {
               enableHighAccuracy: true,
-              maximumAge: 1,
-              timeout: 1
+              maximumAge: 1000, // Reduce the maximum age of a cached position
+              timeout: 5000 // Set a timeout to ensure the position is retrieved quickly
           });
       } else {
           alert('Geolocation is not supported by your browser.');
